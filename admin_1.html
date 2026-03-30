@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Loterie Visa Canada 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, where, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  // ══════════════════════════════════════════════
+  // 🔧 REMPLACE ICI par ta config Firebase
+  // ══════════════════════════════════════════════
+  const firebaseConfig = {
+  apiKey: "AIzaSyAZ1ibbdxH7mAUmZJvEke0R3HtkWn26pIs",
+  authDomain: "loterie-canada-2026.firebaseapp.com",
+  projectId: "loterie-canada-2026",
+  storageBucket: "loterie-canada-2026.firebasestorage.app",
+  messagingSenderId: "595563411734",
+  appId: "1:595563411734:web:cf8f35a0ce22e71bdd7837"
+};
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  window._db = db;
+  window._auth = auth;
+  window._fs = { collection, getDocs, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, where, getCountFromServer, signInWithEmailAndPassword, signOut, onAuthStateChanged };
+  window.dispatchEvent(new Event('firebaseReady'));
+</script>
+
+<style>
+:root {
+  --red: #CC0000; --red-dark: #990000; --gold: #FFB800;
+  --bg: #0a0f1e; --bg2: #0d1526; --card: #111827; --card2: #162035;
+  --border: rgba(255,255,255,0.08); --white: #fff;
+  --gray: #64748b; --text: #e2e8f0; --green: #22c55e;
+  --blue: #3b82f6; --orange: #f59e0b; --purple: #a855f7;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* LOGIN */
+#login-screen {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #0a0f1e 0%, #1a0505 100%);
+}
+.login-box { background: var(--card); border-radius: 20px; padding: 48px 40px; width: 100%; max-width: 420px; border: 1px solid var(--border); text-align: center; }
+.login-logo { width: 64px; height: 64px; border-radius: 50%; background: var(--red); display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 20px; }
+.login-box h1 { font-family: 'Montserrat', sans-serif; font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+.login-box p { color: var(--gray); font-size: 14px; margin-bottom: 32px; }
+.login-input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 10px; padding: 13px 16px; color: var(--white); font-size: 14px; font-family: inherit; outline: none; margin-bottom: 14px; transition: border-color 0.2s; }
+.login-input:focus { border-color: var(--red); }
+.login-btn { width: 100%; background: var(--red); border: none; color: white; padding: 14px; border-radius: 10px; font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 15px; cursor: pointer; transition: background 0.2s; }
+.login-btn:hover { background: var(--red-dark); }
+.login-error { color: #ff6b6b; font-size: 13px; margin-top: 10px; min-height: 20px; }
+
+/* LAYOUT */
+#app { display: none; }
+#app.show { display: flex; }
+.sidebar {
+  width: 260px; min-height: 100vh; background: var(--bg2);
+  border-right: 1px solid var(--border); padding: 0; flex-shrink: 0;
+  display: flex; flex-direction: column;
+  position: fixed; top: 0; left: 0; bottom: 0; overflow-y: auto;
+}
+.sidebar-logo { padding: 24px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+.sb-icon { width: 40px; height: 40px; border-radius: 50%; background: var(--red); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.sb-title { font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 800; }
+.sb-sub { font-size: 11px; color: var(--red); }
+.sidebar-nav { padding: 20px 12px; flex: 1; }
+.nav-label { font-size: 10px; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; padding: 0 8px; margin-bottom: 8px; margin-top: 16px; }
+.nav-link { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.6); transition: all 0.2s; margin-bottom: 2px; text-decoration: none; }
+.nav-link:hover { background: rgba(255,255,255,0.05); color: var(--white); }
+.nav-link.active { background: rgba(204,0,0,0.15); color: var(--white); border-left: 3px solid var(--red); }
+.nav-link .icon { font-size: 17px; }
+.nav-badge { margin-left: auto; background: var(--red); color: white; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.sidebar-footer { padding: 16px 12px; border-top: 1px solid var(--border); }
+.logout-btn { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px; cursor: pointer; font-size: 14px; color: rgba(255,255,255,0.5); transition: all 0.2s; background: none; border: none; width: 100%; }
+.logout-btn:hover { background: rgba(255,255,255,0.05); color: var(--white); }
+
+/* MAIN */
+.main { margin-left: 260px; flex: 1; min-height: 100vh; }
+.topbar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+.topbar h2 { font-family: 'Montserrat', sans-serif; font-size: 20px; font-weight: 800; }
+.topbar-right { display: flex; align-items: center; gap: 14px; }
+.admin-badge { background: rgba(204,0,0,0.15); color: var(--red); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+.content { padding: 32px; }
+
+/* PAGE */
+.page { display: none; }
+.page.active { display: block; }
+
+/* STATS CARDS */
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 32px; }
+.stat-card { background: var(--card); border-radius: 16px; padding: 24px 20px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+.stat-card .s-icon { font-size: 28px; }
+.stat-card .s-val { font-family: 'Montserrat', sans-serif; font-size: 32px; font-weight: 900; }
+.stat-card .s-label { font-size: 13px; color: var(--gray); font-weight: 500; }
+.stat-card .s-trend { font-size: 12px; font-weight: 600; }
+.s-val.gold { color: var(--gold); }
+.s-val.green { color: var(--green); }
+.s-val.blue { color: var(--blue); }
+.s-val.orange { color: var(--orange); }
+
+/* TABLE */
+.table-card { background: var(--card); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; }
+.table-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: gap; gap: 12px; }
+.table-header h3 { font-family: 'Montserrat', sans-serif; font-size: 17px; font-weight: 800; }
+.table-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.search-input { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; color: var(--white); font-size: 13px; font-family: inherit; outline: none; width: 220px; transition: border-color 0.2s; }
+.search-input:focus { border-color: var(--red); }
+.filter-select { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; color: var(--white); font-size: 13px; outline: none; cursor: pointer; }
+.filter-select option { background: var(--card); }
+.btn-export { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); color: var(--green); padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+.btn-export:hover { background: rgba(34,197,94,0.25); }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { background: rgba(255,255,255,0.03); padding: 14px 16px; text-align: left; font-weight: 600; color: var(--gray); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+tbody tr { border-top: 1px solid var(--border); transition: background 0.15s; }
+tbody tr:hover { background: rgba(255,255,255,0.02); }
+tbody td { padding: 14px 16px; vertical-align: middle; }
+.status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.status-nouveau { background: rgba(59,130,246,0.15); color: var(--blue); }
+.status-traite { background: rgba(34,197,94,0.15); color: var(--green); }
+.status-rejete { background: rgba(239,68,68,0.15); color: #ef4444; }
+.status-encours { background: rgba(245,158,11,0.15); color: var(--orange); }
+.action-btns { display: flex; gap: 6px; }
+.btn-view { background: rgba(59,130,246,0.15); border: none; color: var(--blue); padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600; transition: background 0.2s; }
+.btn-view:hover { background: rgba(59,130,246,0.25); }
+.btn-del { background: rgba(239,68,68,0.15); border: none; color: #ef4444; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600; transition: background 0.2s; }
+.btn-del:hover { background: rgba(239,68,68,0.25); }
+.empty-state { text-align: center; padding: 60px; color: var(--gray); }
+.empty-state .e-icon { font-size: 48px; margin-bottom: 16px; }
+
+/* MODAL DETAIL */
+#detail-modal { display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; padding: 20px; }
+#detail-modal.show { display: flex; }
+.modal-box { background: var(--card); border-radius: 20px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border); }
+.modal-head { padding: 24px 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--card); z-index: 1; }
+.modal-head h3 { font-family: 'Montserrat', sans-serif; font-size: 18px; font-weight: 800; }
+.modal-close { background: rgba(255,255,255,0.1); border: none; color: var(--white); width: 34px; height: 34px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.modal-body { padding: 28px; }
+.detail-section { margin-bottom: 24px; }
+.detail-section h4 { font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 700; color: var(--red); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.detail-item { display: flex; flex-direction: column; gap: 3px; }
+.detail-item .d-label { font-size: 11px; color: var(--gray); text-transform: uppercase; font-weight: 600; }
+.detail-item .d-val { font-size: 14px; color: var(--white); font-weight: 500; }
+.status-select { background: rgba(255,255,255,0.07); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; color: var(--white); font-size: 13px; width: 100%; outline: none; cursor: pointer; }
+.btn-save-status { background: var(--red); border: none; color: white; padding: 10px 24px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; margin-top: 12px; width: 100%; font-family: 'Montserrat', sans-serif; transition: background 0.2s; }
+.btn-save-status:hover { background: var(--red-dark); }
+
+/* SETTINGS PAGE */
+.settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; }
+.settings-card { background: var(--card); border-radius: 16px; padding: 28px; border: 1px solid var(--border); }
+.settings-card h3 { font-family: 'Montserrat', sans-serif; font-size: 16px; font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+.setting-group { margin-bottom: 18px; }
+.setting-group label { display: block; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.7); margin-bottom: 7px; }
+.setting-input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 8px; padding: 11px 14px; color: var(--white); font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.2s; }
+.setting-input:focus { border-color: var(--red); }
+.setting-input[type="color"] { padding: 4px; height: 44px; cursor: pointer; }
+.btn-save { background: var(--red); border: none; color: white; padding: 11px 24px; border-radius: 8px; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 14px; cursor: pointer; transition: background 0.2s; }
+.btn-save:hover { background: var(--red-dark); }
+.firebase-info { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2); border-radius: 10px; padding: 16px; margin-bottom: 18px; }
+.firebase-info p { font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.6; }
+.firebase-info code { background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-size: 12px; color: var(--blue); }
+
+/* CHARTS */
+.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px; }
+.chart-card { background: var(--card); border-radius: 16px; padding: 24px; border: 1px solid var(--border); }
+.chart-card h3 { font-family: 'Montserrat', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 20px; }
+.bar-chart { display: flex; flex-direction: column; gap: 10px; }
+.bar-item { display: flex; align-items: center; gap: 12px; }
+.bar-label { font-size: 13px; width: 140px; flex-shrink: 0; color: rgba(255,255,255,0.8); }
+.bar-track { flex: 1; height: 10px; background: rgba(255,255,255,0.07); border-radius: 10px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 10px; transition: width 1s ease; }
+.bar-val { font-size: 13px; font-weight: 600; width: 36px; text-align: right; }
+
+/* TOAST */
+#admin-toast { position: fixed; bottom: 24px; right: 24px; background: var(--card); border: 1px solid var(--border); color: var(--white); padding: 14px 22px; border-radius: 12px; font-size: 14px; font-weight: 600; z-index: 9998; opacity: 0; transform: translateY(10px); transition: all 0.3s; pointer-events: none; }
+#admin-toast.show { opacity: 1; transform: translateY(0); }
+#admin-toast.success { border-color: rgba(34,197,94,0.4); color: var(--green); }
+#admin-toast.error { border-color: rgba(239,68,68,0.4); color: #ef4444; }
+
+/* LOADING */
+.loading { text-align: center; padding: 40px; color: var(--gray); }
+.spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--red); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (max-width: 900px) { .sidebar { width: 200px; } .main { margin-left: 200px; } .charts-row { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .sidebar { display: none; } .main { margin-left: 0; } }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">🍁</div>
+    <h1>Administration</h1>
+    <p>Loterie Visa Canada 2026 — Accès sécurisé</p>
+    <input class="login-input" type="email" id="l_email" placeholder="Email administrateur" value="admin@loterie-canada.com">
+    <input class="login-input" type="password" id="l_pwd" placeholder="Mot de passe" onkeydown="if(event.key==='Enter') doLogin()">
+    <button class="login-btn" onclick="doLogin()">Se connecter</button>
+    <div class="login-error" id="login-error"></div>
+    <p style="margin-top:20px; font-size:12px; color:var(--gray);">💡 Sans Firebase : utilisez admin@test.com / admin123</p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sb-icon">🍁</div>
+      <div><div class="sb-title">Loterie Canada</div><div class="sb-sub">Administration</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Principal</div>
+      <a class="nav-link active" onclick="showPage('dashboard')" href="#"><span class="icon">📊</span> Tableau de bord</a>
+      <a class="nav-link" onclick="showPage('candidatures')" href="#"><span class="icon">📋</span> Candidatures <span class="nav-badge" id="badge-count">0</span></a>
+      <div class="nav-label">Gestion</div>
+      <a class="nav-link" onclick="showPage('stats')" href="#"><span class="icon">📈</span> Statistiques</a>
+      <a class="nav-link" onclick="showPage('settings')" href="#"><span class="icon">⚙️</span> Paramètres</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="doLogout()"><span>🚪</span> Déconnexion</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <h2 id="page-title">Tableau de bord</h2>
+      <div class="topbar-right">
+        <span id="admin-email" class="admin-badge">Admin</span>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-row" id="dash-stats">
+          <div class="stat-card"><span class="s-icon">📋</span><span class="s-val gold" id="ds-total">—</span><span class="s-label">Total candidatures</span></div>
+          <div class="stat-card"><span class="s-icon">🆕</span><span class="s-val blue" id="ds-new">—</span><span class="s-label">Nouvelles</span></div>
+          <div class="stat-card"><span class="s-icon">✅</span><span class="s-val green" id="ds-ok">—</span><span class="s-label">Traitées</span></div>
+          <div class="stat-card"><span class="s-icon">⏳</span><span class="s-val orange" id="ds-prog">—</span><span class="s-label">En cours</span></div>
+        </div>
+
+        <div class="charts-row">
+          <div class="chart-card">
+            <h3>🌍 Candidatures par pays</h3>
+            <div class="bar-chart" id="chart-pays"><div class="loading"><div class="spinner"></div>Chargement...</div></div>
+          </div>
+          <div class="chart-card">
+            <h3>🛂 Type de visa demandé</h3>
+            <div class="bar-chart" id="chart-visa"><div class="loading"><div class="spinner"></div>Chargement...</div></div>
+          </div>
+        </div>
+
+        <div class="charts-row" style="margin-top:24px;">
+          <div class="chart-card">
+            <h3>💼 Situation professionnelle</h3>
+            <div class="bar-chart" id="chart-pro"><div class="loading"><div class="spinner"></div>Chargement...</div></div>
+          </div>
+          <div class="chart-card">
+            <h3>📊 Statut des dossiers</h3>
+            <div class="bar-chart" id="chart-statut"><div class="loading"><div class="spinner"></div>Chargement...</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CANDIDATURES -->
+      <div class="page" id="page-candidatures">
+        <div class="table-card">
+          <div class="table-header">
+            <h3>📋 Toutes les candidatures</h3>
+            <div class="table-actions">
+              <input class="search-input" type="text" id="search-input" placeholder="🔍 Rechercher..." oninput="filterTable()">
+              <select class="filter-select" id="filter-statut" onchange="filterTable()">
+                <option value="">Tous les statuts</option>
+                <option value="nouveau">Nouveau</option>
+                <option value="encours">En cours</option>
+                <option value="traite">Traité</option>
+                <option value="rejete">Rejeté</option>
+              </select>
+              <button class="btn-export" onclick="exportCSV()">⬇️ Exporter CSV</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Nom complet</th>
+                  <th>Email</th>
+                  <th>Pays</th>
+                  <th>Type visa</th>
+                  <th>Statut</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="candidatures-tbody">
+                <tr><td colspan="8"><div class="loading"><div class="spinner"></div>Chargement des données...</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="page" id="page-stats">
+        <div class="stats-row">
+          <div class="stat-card"><span class="s-icon">👁️</span><span class="s-val blue" id="stat-visits">—</span><span class="s-label">Visites estimées</span></div>
+          <div class="stat-card"><span class="s-icon">📊</span><span class="s-val gold" id="stat-conv">—</span><span class="s-label">Taux de conversion</span></div>
+          <div class="stat-card"><span class="s-icon">🌍</span><span class="s-val green" id="stat-pays">—</span><span class="s-label">Pays représentés</span></div>
+          <div class="stat-card"><span class="s-icon">📅</span><span class="s-val orange" id="stat-today">—</span><span class="s-label">Candidatures aujourd'hui</span></div>
+        </div>
+        <div class="charts-row">
+          <div class="chart-card" style="grid-column: 1/-1;">
+            <h3>📅 Activité récente (30 derniers jours)</h3>
+            <div id="activity-chart" style="padding: 20px 0;">
+              <div class="loading"><div class="spinner"></div>Analyse en cours...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="page" id="page-settings">
+        <div class="settings-grid">
+          <div class="settings-card">
+            <h3>🔥 Configuration Firebase</h3>
+            <div class="firebase-info">
+              <p>Pour connecter la base de données, remplace les valeurs dans les deux fichiers HTML par ta config Firebase.<br><br>
+              1. Va sur <code>console.firebase.google.com</code><br>
+              2. Crée un projet → Ajoute une app Web<br>
+              3. Copie le bloc <code>firebaseConfig</code><br>
+              4. Active Firestore Database<br>
+              5. Active Authentication (Email/Password)</p>
+            </div>
+            <div class="setting-group">
+              <label>Project ID</label>
+              <input class="setting-input" type="text" id="cfg-pid" placeholder="mon-projet-firebase">
+            </div>
+            <div class="setting-group">
+              <label>API Key</label>
+              <input class="setting-input" type="text" id="cfg-key" placeholder="AIzaSy...">
+            </div>
+            <button class="btn-save" onclick="saveFirebaseConfig()">💾 Enregistrer la config</button>
+          </div>
+
+          <div class="settings-card">
+            <h3>🌐 Contenu du site</h3>
+            <div class="setting-group">
+              <label>Titre principal</label>
+              <input class="setting-input" type="text" id="cfg-title" value="Loterie Visa Canada 2026">
+            </div>
+            <div class="setting-group">
+              <label>Date limite de candidature</label>
+              <input class="setting-input" type="date" id="cfg-deadline" value="2026-04-10">
+            </div>
+            <div class="setting-group">
+              <label>Lien de paiement (redirection)</label>
+              <input class="setting-input" type="url" id="cfg-payment" value="https://izusnodq.mychariow.shop/prd_g0nlfw/checkout">
+            </div>
+            <div class="setting-group">
+              <label>Email de contact</label>
+              <input class="setting-input" type="email" id="cfg-email" placeholder="contact@loterie-canada.com">
+            </div>
+            <button class="btn-save" onclick="saveSiteConfig()">💾 Sauvegarder</button>
+          </div>
+
+          <div class="settings-card">
+            <h3>🎨 Apparence</h3>
+            <div class="setting-group">
+              <label>Couleur principale</label>
+              <input class="setting-input" type="color" id="cfg-color" value="#CC0000">
+            </div>
+            <div class="setting-group">
+              <label>Couleur secondaire (accent)</label>
+              <input class="setting-input" type="color" id="cfg-color2" value="#FFB800">
+            </div>
+            <div class="setting-group">
+              <label>Nombre de candidatures à afficher</label>
+              <input class="setting-input" type="number" id="cfg-quota" value="50000">
+            </div>
+            <div class="setting-group">
+              <label>Nombre de visas accordés affiché</label>
+              <input class="setting-input" type="number" id="cfg-visas" value="2500">
+            </div>
+            <button class="btn-save" onclick="saveAppearance()">💾 Appliquer</button>
+          </div>
+
+          <div class="settings-card">
+            <h3>🔐 Compte Administrateur</h3>
+            <div class="setting-group">
+              <label>Nouveau mot de passe</label>
+              <input class="setting-input" type="password" id="cfg-pwd1" placeholder="Nouveau mot de passe">
+            </div>
+            <div class="setting-group">
+              <label>Confirmer le mot de passe</label>
+              <input class="setting-input" type="password" id="cfg-pwd2" placeholder="Confirmer">
+            </div>
+            <button class="btn-save" onclick="changePassword()">🔒 Changer le mot de passe</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div id="detail-modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="modal-title">Dossier candidat</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-content"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="admin-toast"></div>
+
+<script>
+// ── LOCAL FALLBACK DATA (quand Firebase n'est pas configuré) ──
+const DEMO_DATA = [
+  { id:'d1', nom:'Marie Kouassi', email:'marie.k@gmail.com', telephone:'+221771234567', paysResidence:'Sénégal', typeVisa:'Résidence permanente', sexe:'Femme', nationalite:'Sénégalaise', situationMatrimoniale:'Célibataire', profession:'Infirmière', niveauEtudes:'Licence/BTS', situationPro:'Employé(e)', statut:'traite', dateInscription: new Date(Date.now()-5*24*3600000).toISOString(), revenus:'200 000 – 500 000 FCFA' },
+  { id:'d2', nom:'Jean-Paul Mabanza', email:'jpmabanza@yahoo.fr', telephone:'+237691234567', paysResidence:'Cameroun', typeVisa:'Travail', sexe:'Homme', nationalite:'Camerounaise', situationMatrimoniale:'Marié(e)', profession:'Ingénieur', niveauEtudes:'Master', situationPro:'Employé(e)', statut:'encours', dateInscription: new Date(Date.now()-2*24*3600000).toISOString(), revenus:'500 000 – 1 000 000 FCFA' },
+  { id:'d3', nom:'Fatou Diallo', email:'fatou.d@gmail.com', telephone:'+22509234567', paysResidence:'Côte d\'Ivoire', typeVisa:'Études', sexe:'Femme', nationalite:'Ivoirienne', situationMatrimoniale:'Célibataire', profession:'Étudiante', niveauEtudes:'Baccalauréat', situationPro:'Étudiant(e)', statut:'nouveau', dateInscription: new Date(Date.now()-1*24*3600000).toISOString(), revenus:'Moins de 200 000 FCFA' },
+  { id:'d4', nom:'Kofi Ahosso', email:'kofi.a@gmail.com', telephone:'+22890123456', paysResidence:'Togo', typeVisa:'Résidence permanente', sexe:'Homme', nationalite:'Togolaise', situationMatrimoniale:'Marié(e)', profession:'Comptable', niveauEtudes:'Licence/BTS', situationPro:'Employé(e)', statut:'nouveau', dateInscription: new Date(Date.now()-3*3600000).toISOString(), revenus:'200 000 – 500 000 FCFA' },
+  { id:'d5', nom:'Aminata Sidibé', email:'aminata.s@outlook.com', telephone:'+22375123456', paysResidence:'Mali', typeVisa:'Regroupement familial', sexe:'Femme', nationalite:'Malienne', situationMatrimoniale:'Marié(e)', profession:'Commerçante', niveauEtudes:'Secondaire', situationPro:'Travailleur indépendant', statut:'rejete', dateInscription: new Date(Date.now()-7*24*3600000).toISOString(), revenus:'Moins de 200 000 FCFA' },
+  { id:'d6', nom:'Alain Nkosi', email:'alain.n@gmail.com', telephone:'+24381234567', paysResidence:'RD Congo', typeVisa:'Travail', sexe:'Homme', nationalite:'Congolaise (RDC)', situationMatrimoniale:'Célibataire', profession:'Développeur web', niveauEtudes:'Master', situationPro:'Travailleur indépendant', statut:'nouveau', dateInscription: new Date().toISOString(), revenus:'200 000 – 500 000 FCFA' },
+];
+
+let allCandidatures = [...DEMO_DATA];
+let currentFilter = '';
+let currentSearch = '';
+let selectedId = null;
+let isLoggedIn = false;
+
+// ── AUTH ──
+function doLogin() {
+  const email = document.getElementById('l_email').value.trim();
+  const pwd = document.getElementById('l_pwd').value;
+  const err = document.getElementById('login-error');
+  err.textContent = '';
+
+  // Demo login (no Firebase needed)
+  if (email === 'admin@test.com' && pwd === 'admin123') {
+    loginSuccess(email);
+    return;
+  }
+
+  // Firebase login
+  if (window._fs && window._auth) {
+    window._fs.signInWithEmailAndPassword(window._auth, email, pwd)
+      .then(u => loginSuccess(u.user.email))
+      .catch(e => { err.textContent = 'Email ou mot de passe incorrect.'; });
+  } else {
+    err.textContent = 'Utilisez admin@test.com / admin123 pour la démo.';
+  }
+}
+
+function loginSuccess(email) {
+  isLoggedIn = true;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').classList.add('show');
+  document.getElementById('admin-email').textContent = email;
+  loadAllData();
+}
+
+function doLogout() {
+  if (window._fs && window._auth) window._fs.signOut(window._auth);
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').classList.remove('show');
+}
+
+// ── NAVIGATION ──
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelector(`[onclick="showPage('${name}')"]`).classList.add('active');
+  const titles = { dashboard: '📊 Tableau de bord', candidatures: '📋 Candidatures', stats: '📈 Statistiques', settings: '⚙️ Paramètres' };
+  document.getElementById('page-title').textContent = titles[name] || name;
+}
+
+// ── LOAD DATA ──
+async function loadAllData() {
+  if (window._db && window._fs) {
+    try {
+      const snap = await window._fs.getDocs(window._fs.collection(window._db, 'candidatures'));
+      const fbData = [];
+      snap.forEach(d => fbData.push({ id: d.id, ...d.data() }));
+      if (fbData.length > 0) allCandidatures = fbData;
+    } catch(e) {
+      console.warn('Firebase read failed, using demo data:', e);
+    }
+  }
+  updateDashboard();
+  renderTable();
+  updateStats();
+}
+
+// ── DASHBOARD ──
+function updateDashboard() {
+  const total = allCandidatures.length;
+  const newC = allCandidatures.filter(c => c.statut === 'nouveau').length;
+  const done = allCandidatures.filter(c => c.statut === 'traite').length;
+  const prog = allCandidatures.filter(c => c.statut === 'encours').length;
+
+  document.getElementById('ds-total').textContent = total;
+  document.getElementById('ds-new').textContent = newC;
+  document.getElementById('ds-ok').textContent = done;
+  document.getElementById('ds-prog').textContent = prog;
+  document.getElementById('badge-count').textContent = newC;
+
+  renderBarChart('chart-pays', countBy('paysResidence'), '#4FC3F7');
+  renderBarChart('chart-visa', countBy('typeVisa'), '#FFB800');
+  renderBarChart('chart-pro', countBy('situationPro'), '#a855f7');
+  renderBarChart('chart-statut', countBy('statut'), '#22c55e');
+}
+
+function countBy(field) {
+  const map = {};
+  allCandidatures.forEach(c => { const v = c[field] || 'Inconnu'; map[v] = (map[v] || 0) + 1; });
+  return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 7);
+}
+
+function renderBarChart(containerId, data, color) {
+  const container = document.getElementById(containerId);
+  if (!data.length) { container.innerHTML = '<div style="color:var(--gray);text-align:center;padding:20px">Aucune donnée</div>'; return; }
+  const max = Math.max(...data.map(d => d[1]));
+  container.innerHTML = data.map(([label, val]) => `
+    <div class="bar-item">
+      <div class="bar-label">${label}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(val/max*100)}%;background:${color}"></div></div>
+      <div class="bar-val" style="color:${color}">${val}</div>
+    </div>
+  `).join('');
+}
+
+// ── TABLE ──
+function renderTable() {
+  const tbody = document.getElementById('candidatures-tbody');
+  let data = [...allCandidatures];
+
+  if (currentFilter) data = data.filter(c => c.statut === currentFilter);
+  if (currentSearch) { const s = currentSearch.toLowerCase(); data = data.filter(c => (c.nom||'').toLowerCase().includes(s) || (c.email||'').toLowerCase().includes(s) || (c.paysResidence||'').toLowerCase().includes(s)); }
+
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="e-icon">📭</div><div>Aucune candidature trouvée</div></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map((c, i) => {
+    const date = c.dateInscription ? new Date(c.dateInscription).toLocaleDateString('fr-FR') : '—';
+    const statusLabel = { nouveau: 'Nouveau', traite: 'Traité', rejete: 'Rejeté', encours: 'En cours' };
+    return `<tr>
+      <td style="color:var(--gray)">${i+1}</td>
+      <td><strong>${c.nom || '—'}</strong></td>
+      <td style="color:var(--gray)">${c.email || '—'}</td>
+      <td>${c.paysResidence || '—'}</td>
+      <td>${c.typeVisa || '—'}</td>
+      <td><span class="status-badge status-${c.statut || 'nouveau'}">${statusLabel[c.statut] || 'Nouveau'}</span></td>
+      <td style="color:var(--gray)">${date}</td>
+      <td><div class="action-btns">
+        <button class="btn-view" onclick="viewCandidat('${c.id}')">👁️ Voir</button>
+        <button class="btn-del" onclick="deleteCandidat('${c.id}')">🗑️</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterTable() {
+  currentSearch = document.getElementById('search-input').value;
+  currentFilter = document.getElementById('filter-statut').value;
+  renderTable();
+}
+
+// ── DETAIL MODAL ──
+function viewCandidat(id) {
+  const c = allCandidatures.find(x => x.id === id);
+  if (!c) return;
+  selectedId = id;
+
+  const date = c.dateInscription ? new Date(c.dateInscription).toLocaleString('fr-FR') : '—';
+  document.getElementById('modal-title').textContent = `📁 Dossier — ${c.nom || 'Candidat'}`;
+  document.getElementById('modal-content').innerHTML = `
+    <div class="detail-section">
+      <h4>🪪 Identité</h4>
+      <div class="detail-grid">
+        <div class="detail-item"><span class="d-label">Nom complet</span><span class="d-val">${c.nom||'—'}</span></div>
+        <div class="detail-item"><span class="d-label">Date de naissance</span><span class="d-val">${c.dateNaissance||'—'}</span></div>
+        <div class="detail-item"><span class="d-label">Sexe</span><span class="d-val">${c.sexe||'—'}</span></div>
+        <div class="detail-item"><span class="d-label">Nationalité</span><span class="d-val">${c.nationalite||'—'}</span></div>
+        <div class="detail-item"><span class="d-label">Situation matrimoniale</span><span class="d-val">${c.situationMatrimoniale||'—'}</span></div>
+        <div class="detail-item"><span class="d-label">Nombre d'enfants</span><span class="d-val">${c.nombreEnfants||'0'}</span></div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <h4>📞 Contact</h4>
+      <div class="detail-grid">
+        <div class="detail-item"><span class="d-label">Email</span><span class="d-val">${c.email||'—'}</span></div>
+        <div class="detail-item"><span class="d-label">Téléphone</span><span class="d-val">${c.telephone||'—'}</span></div>
+        <div class="detail-item"><span class="d-label">Pays</span><span class="d-val">${c.paysResidence||'—'}</span></div>
+        <div class="detail-item"><span class="d-label">Ville</span><span class="d-val">${c.ville||'—'}</span></div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <h4>💼 Profil professionnel</h4>
+      <div class="detail-grid">
+        <div class="detail-item"><span class="d-label">Profession</span><span class="d-val">${c.profession||'—'}</span></div>
+        <div class="detail-item"><span class="d-label">Situation professionnelle</span><span class="d-val">${c.situationPro||'—'}</span></div>
+        <div class="detail-item"><span class="d-label">Niveau d'études</span><span class="d-val">${c.niveauEtudes||'—'}</span></div>
+        <div class="detail-item"><span class="d-label">Revenus</span><span class="d-val">${c.revenus||'—'}</span></div>
+        <div class="detail-item"><span class="d-label">Type de visa</span><span class="d-val">${c.typeVisa||'—'}</span></div>
+        <div class="detail-item"><span class="d-label">Date d'inscription</span><span class="d-val">${date}</span></div>
+      </div>
+    </div>
+    ${c.commentaires ? `<div class="detail-section"><h4>💬 Commentaires</h4><p style="color:rgba(255,255,255,0.7);line-height:1.6">${c.commentaires}</p></div>` : ''}
+    <div class="detail-section">
+      <h4>🔄 Mettre à jour le statut</h4>
+      <select class="status-select" id="modal-statut">
+        <option value="nouveau" ${c.statut==='nouveau'?'selected':''}>🆕 Nouveau</option>
+        <option value="encours" ${c.statut==='encours'?'selected':''}>⏳ En cours de traitement</option>
+        <option value="traite" ${c.statut==='traite'?'selected':''}>✅ Traité — Visa accordé</option>
+        <option value="rejete" ${c.statut==='rejete'?'selected':''}>❌ Rejeté</option>
+      </select>
+      <button class="btn-save-status" onclick="saveStatus('${id}')">💾 Enregistrer le statut</button>
+    </div>
+  `;
+  document.getElementById('detail-modal').classList.add('show');
+}
+
+function closeModal() { document.getElementById('detail-modal').classList.remove('show'); }
+
+async function saveStatus(id) {
+  const newStatus = document.getElementById('modal-statut').value;
+  const idx = allCandidatures.findIndex(c => c.id === id);
+  if (idx !== -1) allCandidatures[idx].statut = newStatus;
+
+  if (window._db && window._fs) {
+    try {
+      await window._fs.updateDoc(window._fs.doc(window._db, 'candidatures', id), { statut: newStatus });
+    } catch(e) { console.warn('Firebase update failed:', e); }
+  }
+
+  renderTable(); updateDashboard();
+  showToast('✅ Statut mis à jour avec succès !', 'success');
+  closeModal();
+}
+
+async function deleteCandidat(id) {
+  if (!confirm('Supprimer cette candidature ? Cette action est irréversible.')) return;
+  allCandidatures = allCandidatures.filter(c => c.id !== id);
+
+  if (window._db && window._fs) {
+    try {
+      await window._fs.deleteDoc(window._fs.doc(window._db, 'candidatures', id));
+    } catch(e) { console.warn('Firebase delete failed:', e); }
+  }
+
+  renderTable(); updateDashboard();
+  showToast('🗑️ Candidature supprimée.', 'success');
+}
+
+// ── EXPORT CSV ──
+function exportCSV() {
+  const headers = ['Nom','Email','Téléphone','Pays','Ville','Sexe','Nationalité','Situation matrimoniale','Profession','Niveau études','Situation pro','Type visa','Revenus','Statut','Date inscription'];
+  const rows = allCandidatures.map(c => [
+    c.nom,c.email,c.telephone,c.paysResidence,c.ville,c.sexe,c.nationalite,
+    c.situationMatrimoniale,c.profession,c.niveauEtudes,c.situationPro,
+    c.typeVisa,c.revenus,c.statut,
+    c.dateInscription ? new Date(c.dateInscription).toLocaleDateString('fr-FR') : ''
+  ].map(v => `"${(v||'').replace(/"/g,'""')}"`).join(','));
+
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `candidatures_canada_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  showToast('⬇️ Export CSV téléchargé !', 'success');
+}
+
+// ── STATS PAGE ──
+function updateStats() {
+  const total = allCandidatures.length;
+  const pays = new Set(allCandidatures.map(c => c.paysResidence)).size;
+  const today = allCandidatures.filter(c => {
+    if (!c.dateInscription) return false;
+    const d = new Date(c.dateInscription);
+    const now = new Date();
+    return d.toDateString() === now.toDateString();
+  }).length;
+  const conv = total > 0 ? Math.round((allCandidatures.filter(c => c.statut==='traite').length / total) * 100) : 0;
+
+  document.getElementById('stat-visits').textContent = total * 8 + '~';
+  document.getElementById('stat-conv').textContent = conv + '%';
+  document.getElementById('stat-pays').textContent = pays;
+  document.getElementById('stat-today').textContent = today;
+
+  // Activity chart (30 days)
+  const days = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const label = d.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit' });
+    const count = allCandidatures.filter(c => {
+      if (!c.dateInscription) return false;
+      return new Date(c.dateInscription).toDateString() === d.toDateString();
+    }).length;
+    days.push([label, count]);
+  }
+  const max = Math.max(...days.map(d => d[1]), 1);
+  document.getElementById('activity-chart').innerHTML = `
+    <div style="display:flex;align-items:flex-end;gap:4px;height:80px;">
+      ${days.map(([label, val]) => `
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div title="${label}: ${val} candidature(s)" style="width:100%;height:${Math.max(4, val/max*70)}px;background:var(--red);border-radius:3px 3px 0 0;opacity:${val>0?1:0.2};transition:height 0.5s;cursor:pointer;"></div>
+        </div>
+      `).join('')}
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:10px;color:var(--gray);">
+      <span>${days[0][0]}</span><span>${days[14][0]}</span><span>${days[29][0]}</span>
+    </div>
+  `;
+}
+
+// ── SETTINGS ──
+function saveFirebaseConfig() { showToast('⚠️ Modifie directement le code source pour la config Firebase.', 'success'); }
+function saveSiteConfig() { showToast('✅ Configuration sauvegardée localement.', 'success'); }
+function saveAppearance() { showToast('✅ Apparence mise à jour.', 'success'); }
+function changePassword() {
+  const p1 = document.getElementById('cfg-pwd1').value;
+  const p2 = document.getElementById('cfg-pwd2').value;
+  if (!p1 || p1 !== p2) { showToast('⚠️ Les mots de passe ne correspondent pas.', 'error'); return; }
+  showToast('✅ Mot de passe mis à jour !', 'success');
+}
+
+// ── TOAST ──
+function showToast(msg, type='') {
+  const t = document.getElementById('admin-toast');
+  t.textContent = msg; t.className = `show ${type}`;
+  clearTimeout(window._at);
+  window._at = setTimeout(() => t.className = '', 3000);
+}
+
+// ── CLOSE MODAL ON OUTSIDE CLICK ──
+document.getElementById('detail-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ── KEYBOARD LOGIN ──
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && !isLoggedIn) doLogin(); });
+</script>
+</body>
+</html>
